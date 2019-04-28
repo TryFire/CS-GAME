@@ -1,6 +1,7 @@
 #include "Chasseur.h"
 #include "Gardien.h"
 #include <iostream>
+#include <cmath>
 /*
  *	Tente un deplacement.
  */
@@ -36,6 +37,12 @@ Chasseur::Chasseur (Labyrinthe* l) : Mover (20, 50, l, 0)
 
 bool Chasseur::process_fireball (float dx, float dy)
 {
+
+	// calculer la distance entre le chasseur et le lieu de l'explosion.
+	float	x = (_x - _fb -> get_x ()) / Environnement::scale;
+	float	y = (_y - _fb -> get_y ()) / Environnement::scale;
+	float	dist2 = sqrt(x*x + y*y);
+
 	float forward_ball_x = _fb -> get_x () + dx;
 	float forward_ball_y = _fb -> get_y () + dy;
 
@@ -47,21 +54,23 @@ bool Chasseur::process_fireball (float dx, float dy)
 	{
 		Mover * g = _l -> _guards[i];
 		//std :: cout << "dis : "<< ((Gardien *)g) ->calculate_distance(forward_ball_x, forward_ball_y) << std::endl;
-		//int pos_g_x = (int)(g -> _x / Environnement::scale);
-		//int pos_g_y = (int)(g -> _y / Environnement::scale);
+		int pos_g_x = (int)(g -> _x / Environnement::scale);
+		int pos_g_y = (int)(g -> _y / Environnement::scale);
 
-		if(((Gardien *)g) ->calculate_distance(forward_ball_x, forward_ball_y) < 3) {
-			g -> tomber();
+		if(pos_forward_ball_x == pos_g_x 
+		   && pos_forward_ball_y == pos_g_y) {
+		   	std::cout << "dist2 : "<<dist2 << std::endl;
+		   	if (((Gardien *)g) -> hited(50, 200.0, dist2)){
+		   		g -> rester_au_sol();
+		   	} else {
+		   		g -> tomber();
+		   	}
 			_hunter_hit -> play();
 			return false;
 		}
 	}
 
-
-	// calculer la distance entre le chasseur et le lieu de l'explosion.
-	float	x = (_x - _fb -> get_x ()) / Environnement::scale;
-	float	y = (_y - _fb -> get_y ()) / Environnement::scale;
-	float	dist2 = x*x + y*y;
+	
 	// on bouge que dans le vide!
 	if (EMPTY == _l -> data ((int)((_fb -> get_x () + dx) / Environnement::scale),
 							 (int)((_fb -> get_y () + dy) / Environnement::scale)))
