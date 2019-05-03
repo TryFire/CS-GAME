@@ -1,6 +1,7 @@
 #include "Gardien.h"
 #include <vector>
 #include <iostream>
+#include "Chasseur.h"
 
 using namespace std;
 
@@ -23,7 +24,7 @@ void Gardien::update (void) {
 		initParameters();
 		isInitPara = true;
 		find_direction(get_id_by_x_y(2,10), get_id_by_x_y(5,20));
-		
+		cout << "potentiel_protection : " << calculate_potentiel_protection() << endl;
 		
 	}
 
@@ -34,6 +35,7 @@ void Gardien::update (void) {
 		
 	}
 	else {if(!isMeetEnmy) {
+		attack();
 		recover();
 		if(distance > distance_max) {
 			inverse_direction();
@@ -101,6 +103,132 @@ void Gardien::initParameters() {
 
 	recover_interval_time = 5;
 	recover_percent_per_second = 0.05;
+
+	attack_interval_time = 3;
+	power = 40;
+	max_shoot_dist = 150;
+
+	potentiel_seuil = 1.5*(lab_width+lab_height);
+}
+
+void Gardien::attack(){
+	time(&current_time);
+	if (current_time - last_attack_time >= attack_interval_time)
+	{
+		fire(0);
+		last_attack_time = current_time;
+
+	}
+}
+
+void Gardien::fire (int angle_vertical){
+	message ("Woooshh...");
+	_fb -> init (/* position initiale de la boule */ _x, _y, 10.,
+				 /* angles de vis�e */ angle_vertical, _angle);
+}
+
+bool Gardien::process_fireball (float dx, float dy){
+
+	// calculer la distance entre le gardien et le lieu de l'explosion.
+	float	x = (_x - _fb -> get_x ()) / Environnement::scale;
+	float	y = (_y - _fb -> get_y ()) / Environnement::scale;
+	float	dist2 = sqrt(x*x + y*y);
+
+	// calculer la distance maximum en ligne droite.
+	//float	dmax2 = sqrt((_l -> width ())*(_l -> width ()) + (_l -> height ())*(_l -> height ()));
+
+	float forward_ball_x = _fb -> get_x () + dx;
+	float forward_ball_y = _fb -> get_y () + dy;
+
+	int pos_forward_ball_x = (int)(forward_ball_x / Environnement::scale);
+	int pos_forward_ball_y = (int)(forward_ball_y / Environnement::scale);
+
+	int pos_chasseur_x = (int)(_l -> _guards[0] -> _x / Environnement::scale);
+	int pos_chasseur_y = (int)(_l -> _guards[0] -> _y / Environnement::scale);
+
+	// le gardien bouge a la chasseur
+	if (pos_chasseur_x == pos_forward_ball_x 
+		&& pos_chasseur_y == pos_forward_ball_y)
+	{
+		cout << "shoot win " << endl;
+		((Chasseur*)(_l -> _guards[0])) -> hited(power, max_shoot_dist, dist2);
+		return false;
+	}
+
+	// test si on a touche un box
+	for (int i = 0; i < _l -> _nboxes; ++i)
+	{
+		// si on a touche un box
+		if (pos_forward_ball_x == (_l -> _boxes[i])._x
+			&& pos_forward_ball_y == (_l -> _boxes[i])._y)
+		{
+			
+			// Le capital de survie revient au maximum
+			current_blood = max_blood;
+			// le box va appartenir
+			cout << "number of box: " <<  _l -> _nboxes << endl;
+			for (int j = i; j < _l -> _nboxes-1; ++j)
+			{
+				_l -> _boxes[j] = _l -> _boxes[j+1];
+			}
+			_l -> _nboxes --;
+			cout << "number of box: " <<  _l -> _nboxes << endl;
+			return false;
+		}
+	}
+
+
+
+
+	// le gardien bouge que dans le vide!
+	if (EMPTY == _l -> data (pos_forward_ball_x, pos_forward_ball_y))
+	{
+		//message ("Woooshh ..... %d", (int) dist2);
+		// il y a la place.
+		return true;
+	}
+	return false;
+}
+
+float Gardien::calculate_potentiel_protection(){
+	// obtenir la position de chasseur
+	int chasseur_x = (int)((_l -> _guards[0] -> _x)/Environnement::scale);
+	int chasseur_y = (int)((_l -> _guards[0] -> _y)/Environnement::scale);
+	// obtenir l'id de chasseur
+	int chasseur_id = get_id_by_x_y(chasseur_x, chasseur_y);
+	// obtenir l'id de treasor
+	int treasor_id = get_id_by_x_y(_l -> _treasor._x, _l -> _treasor._y);
+	// obtenir l'id de this gardien
+	int g_x = (int)(_x / Environnement::scale);
+	int g_y = (int)(_y / Environnement::scale);
+	int g_id = get_id_by_x_y(g_x, g_y);
+	// obtenir le nombre de gardien vivant
+	int number_alive_g = calculate_alive_gardien();
+	// obtenir le entiere nombre de gardien
+	int number_total_g = _l -> _nguards;
+	// obtenir max distance de Labyrinthe
+	int HM_MAX = lab_width + lab_height;
+
+	int HN_g_treasor = get_HN(g_id, treasor_id);
+
+	int HN_c_treasor = get_HN(chasseur_id, treasor_id);
+
+	float potentiel_protection = (HM_MAX - HN_g_treasor-20) + HN_c_treasor + ((float)number_alive_g)/((float)number_total_g-1) * HM_MAX;
+	return potentiel_protection;
+
+}
+
+int Gardien::calculate_alive_gardien(){
+	int alive_number = 0;
+	for (int i = 1; i < _l -> _nguards; ++i)
+	{
+		Mover * g = _l -> _guards[i];
+		if (((Gardien *)g) -> is_alive())
+		{
+			alive_number ++;
+		}
+	}
+	return alive_number;
 }
 
 bool Gardien::hited(int power, float max_dist, float dist){
@@ -140,7 +268,7 @@ void Gardien::recover(){
 	{
 		current_blood += max_blood * recover_percent_per_second;
 		last_recover_time = current_time;
-		cout << "blod  " << current_blood << endl;
+		//cout << "blod  " << current_blood << endl;
 		if(current_blood > max_blood) {
 			current_blood = max_blood;
 		}

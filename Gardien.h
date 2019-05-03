@@ -59,6 +59,7 @@ private:
 
 	int iter;
 
+//==============recover variables============
 	// le temps de derniere fois subir de blessure et le temps currant
 	time_t last_injured_time,current_time;
 	//le personnage reste un certain temps sans subir de blessure
@@ -67,6 +68,21 @@ private:
 	time_t last_recover_time;
 	//le persontage de capital initial de survie est incrémenté par seconde
 	float recover_percent_per_second;
+//==============recover variables============
+//
+//==============attack variables============
+	// Intervalle entre les attaques(seconde)
+	time_t attack_interval_time;
+	// le temps de dernier attaque
+	time_t last_attack_time;
+	// le puissance de pistolet
+	int power;
+	// la distance max dont le pistolet peut arriver
+	int  max_shoot_dist;
+//==============attack variables============
+//
+	float potentiel_protection;
+	float potentiel_seuil;
 
 public:
 	
@@ -78,9 +94,26 @@ public:
 	// et ne bouge pas!
 	bool move (double dx, double dy);
 	// ne sait pas tirer sur un ennemi.
-	void fire (int angle_vertical){}
+	void fire (int angle_vertical);
 	// quand a faire bouger la boule de feu...
-	bool process_fireball (float dx, float dy) { return false; }
+	bool process_fireball (float dx, float dy);
+
+	/**
+	 * calcule le potentiel de protection
+	 * @return : le potentiel de protection
+	 */
+	float calculate_potentiel_protection();
+
+	/**
+	 * si le gardien est vivant, renvoie true
+	 */
+	bool is_alive(){return isDead == false;}
+
+	/**
+	 * calculate le nombre de gardien qui est vivant
+	 * @return : le nombre
+	 */
+	int calculate_alive_gardien();
 
 	/**
 	 * mettre id pour chaque cas de _l -> _data en utilisant (x,y)
@@ -138,6 +171,12 @@ public:
 		int y = get_y_by_id(id);
 		return _l -> data(x,y)  == 0;
 	}
+	/**
+	 * calcule angle de point start a point end
+	 * @param  start [description]
+	 * @param  end   [description]
+	 * @return       [description]
+	 */
 	int calculate_angle(int start, int end);
 	int* get_points_of_4_direction(int id);
 	bool in_vector(std::vector<int *> close_list, int id);
@@ -159,7 +198,16 @@ public:
 	 */
 	bool hited(int power, float max_dist, float dist);
 
+	/**
+	 * si le gardien est blesse, le capital de survie va augementer 5% par seconde 
+	 * si il reste un certain temps sans subir de blessure
+	 */
 	void recover();
+
+	/**
+	 * attack le chasseur 
+	 */
+	void attack();
 
 	void inverse_direction(){
 		//direction = my_mod((direction + M_PI), (2*M_PI));
@@ -186,6 +234,12 @@ public:
 		distance = sqrt(pow(_x - origin_x, 2) + pow(_y - origin_y, 2));
 	}
 
+	/**
+	 * operation mod entre deux flottant
+	 * @param  x1 : float
+	 * @param  x2 : float
+	 * @return    : x2 mod x1
+	 */
 	float my_mod(float x1, float x2) {
 		if(x1 < x2) {
 			return x1;
@@ -194,6 +248,11 @@ public:
 		}
 	}
 
+	/**
+	 * la transformer angle a PI
+	 * @param  angle : int angle
+	 * @return       : numerique associe a PI
+	 */
 	float transfomer_angle_a_pi(int angle){
 		return (angle/360.0)*2*M_PI;
 	}
