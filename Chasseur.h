@@ -2,8 +2,10 @@
 #define CHASSEUR_H
 
 #include <stdio.h>
+#include <iostream>
 #include "Mover.h"
 #include "Sound.h"
+#include <ctime>
 
 class Labyrinthe;
 
@@ -11,6 +13,28 @@ class Chasseur : public Mover {
 private:
 	// accepte ou non un deplacement.
 	bool move_aux (double dx, double dy);
+
+	//capital initial de survie currant
+	int current_blood;
+	//capital initial de survie maximal
+	int max_blood;
+	// Armure
+	int armor;
+	// la distance max dont le pistolet
+	int max_shoot_dist;
+	// le puissance de pistolet
+	int power;
+
+//==============recover variables============
+	// le temps de derniere fois subir de blessure et le temps currant
+	time_t last_injured_time,current_time;
+	//le personnage reste un certain temps sans subir de blessure
+	time_t recover_interval_time;
+	// le temps de dernier fois de incrementer le capital initial de survie
+	time_t last_recover_time;
+	//le persontage de capital initial de survie est incrémenté par seconde
+	float recover_percent_per_second;
+//==============recover variables============
 public:
 	/*
 	 *	Le son...
@@ -22,6 +46,7 @@ public:
 	Chasseur (Labyrinthe* l);
 	// ne bouger que dans une case vide (on 'glisse' le long des obstacles)
 	bool move (double dx, double dy) {
+		recover();
 		return move_aux (dx, dy) || move_aux (dx, 0.0) || move_aux (0.0, dy);
 	}
 	// le chasseur ne pense pas!
@@ -32,6 +57,17 @@ public:
 	void fire (int angle_vertical);
 	// clic droit.
 	void right_click (bool shift, bool control);
+
+	/**
+	 * the gardien is hited by chasseur
+	 * @param  power    : 
+	 * @param  max_dist [description]
+	 * @param  dist     [description]
+	 * @return          [description]
+	 */
+	bool hited(int power, float max_dist, float dist);
+
+	void recover();
 };
 
 #endif
