@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage{caption}
+\usepackage{graphicx}
+\usepackage{url}
+
+\def\N{{\mathcal{N}}}
+\def\NN{{\mathbb{N}}}
+\def\ZZ{{\mathbb{Z}}}
+\def\RR{{\mathbb{R}}}
+\def\un{{\rm{1\!\!1}}}
+\def\CC{{\mathcal{C}}}
+\def\HH{{\mathcal{H}}}
+\def\UU{{\mathcal{U}}}
+\def\II{{\mathcal{I}}}
+\def\JJ{{\mathcal{J}}}
+\def\TT{{\mathcal{T}}}
+\def\PP{{\mathcal{P}}}
+\def\SS{{\mathcal{S}}}
+\def\WW{{\mathcal{W}}}
+\def\KK{{\mathcal{K}}}
+\def\MM{{\mathcal{M}}}
+\def\YY{{\mathcal{Y}}}
+\def\VV{{\mathcal{V}}}
+
+\newtheorem{mydef}{Definition}
+% \newtheorem{theorem}{Theorem}
+% \newtheorem{lemma}{Lemma}
+ \newtheorem{prop}{Proposition}
+ \newtheorem{conj}{Conjecture}
+
+
+\title{Rapport of Projet de Programmation Objet Avancée}
+\author{Xinneng XU et Wei HUANG}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Le but de ce projet est pour réaliser un jeu de type ​\textsl{Kill'emAll}  ​ avec un affichage en 3D, pendant cette durée, nous allons apprendre à écrire un programme à partir de spécifications informelles (énoncé en français), familiariser avec le fait que vos programmes seront réutilisés par d'autres plus tard; donc à les écrire lisiblement en les commentant judicieusement, entrainer à encapsuler vos données et méthodes pour obtenir des programmes robustes et  montrer l'intérêt de séparer la partie traitement d'un programme de sa partie interface utilisateur.
+\end{abstract}
+
+\noindent{\textbf{Keywords}:
+A* Pathfinding; Kill'emAll}
+
+\section{Introduction}
+C'est un jeu de type ​\textsl{Kill'emAll} et il y a deux rôles dan ce jeu : \textsl{Gardien} et \textsl{Chasseur}.  le but pour \textsl{Chasseur(nous)} est de essayer prendre un trésor caché dans une pièce du labyrinthe, et pour \textsl{Gardien(la machine)} le but est de le protéger. Le chasseur et les gardiens peuvent tirer le pistolet et ils vont perdre le capital de survie une fois ils sont touché par le pistolet de l'autre. Pour les gardiens, nous avons implémenter l'algorithe de \textsl{A* Pathfinding} pour que les gardiens pouvent touver le plus court chemin quand il voulent aller à une endroit. Nous allon présenter ce jeu en 3 parties : \textsl{Labyrinthe}, \textsl{Gardien} et \textsl{Chasseur}.
+
+\section{Labyrinthe}
+La classe \textsl{Labyrinthe} est responsable de la construction de la carte et de l'instanciation des rôles. 
+
+Nous avons crée une classe \textsl{Map} qui responsable de lire le ficher de labyrinthe, et le transformer à une matrix de caractères associé à chaque position. Les caractères contient  '+' : intersection des murs,  '-' :  un morceau de mur horizontal, '|' :   un morceau de mur vertical,  'C' : chasseur,  'G' : gardien,   'X' :  caisse, 'a' et 'b' : les morceau de murs ayant la texture et 'espace': que le chaseur et les gardiens pouvent traverser. Dans la classe \textsl{Map}, nous avons lu le ficher de labyrinthe deux fois. La prémière fois, nous avons lu des caractères un par un et calculé le longeur(lab\_width) et largeur(lab\_height) de labyrinthe, et après nous avons créé une tableau par rapport à le longeur et largeur. Pour la deuxième fois, nous vons rempli le tableau   que nous avons créé par les caractères.
+
+Dans la fonction de Constructeur de \textsl{Labyrinthe} qui prend une argement 'char* filename', nous pouvons obtenir le tableau en utilisant la classe \textsl{Map}, et ensuite nous utilisons 3 \textsl{std::vector} pour garder les pointeur de \textsl{Mover(Gardien, Chasseur)}, les \textsl{Box} et les \textsl{Wall} en appliquant la fonction \textsl{push\_back}. Quand nous parcourons le tableau, si le caractère n'est pas espace, nous mettons le valeur de \textsl{\_data(i,j)=1} dans la cas (i,j) pour que les objets ne pouvent pas marcher ici. Après le parcours, nous assignons les valeus aux variables \textsl{(\_guards, \_nguards, \_walls etc)} par raport à les vectors.
+
+\section{Conclusion}
+
+\bibliographystyle{plain} 
+%\bibliographystyle{splncs} 
+\bibliography{bibliopoa}
+
+\end{document}
