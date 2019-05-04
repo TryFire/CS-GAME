@@ -24,6 +24,8 @@ private:
 
 	int move_angle;
 
+	int last_not_meetenmy_move_angle;
+
 	// la position original une fois le gardien crée
 	float origin_x, origin_y;
 	// la distance max que le gardien puisse move
@@ -81,7 +83,10 @@ private:
 	int  max_shoot_dist;
 //==============attack variables============
 //
+//==============potentiel protection variables=========
+	// potentiel protection currant
 	float potentiel_protection;
+	// seuil de potentiel protection qui separe defend et chercher le chasseur
 	float potentiel_seuil;
 
 public:
@@ -178,6 +183,7 @@ public:
 	 * @return       [description]
 	 */
 	int calculate_angle(int start, int end);
+	int calculate_angle(float x1, float y1, float x2, float y2);
 	int* get_points_of_4_direction(int id);
 	bool in_vector(std::vector<int *> close_list, int id);
 	int get_index_of_element(std::vector<int *> close_list, int id);
@@ -221,6 +227,7 @@ public:
 		_angle = (move_angle+270) % 360;
 	}
 
+	// transformation entre move_angle and _angle
 	void change_direction(int angle){
 		move_angle = angle;
 		_angle = (move_angle+270) % 360;
