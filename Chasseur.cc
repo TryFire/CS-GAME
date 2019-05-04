@@ -227,14 +227,12 @@ void Chasseur::recover(){
 }
 
 /*
- *	Clic droit: par d�faut fait tomber le premier gardien.
- *
- *	Inutile dans le vrai jeu, mais c'est juste pour montrer
- *	une utilisation des fonctions � tomber � et � rester_au_sol �
+ * si click + shift,
+ * le chasseur va etre en mode d'emballement, puissance d'attaque augmentée de 100%, volume sanguin augmenté de 100%, armure augmentée de 50%"
+ * ce mode va rester 5 secondes
  */
 
 void Chasseur::right_click (bool shift, bool control) {
-
 	if (shift) {
 		message("Vous entrez en mode d'emballement, puissance d'attaque augmentée de 100%, volume sanguin augmenté de 100%, armure augmentée de 50%");
 		time(&start_runaway_mode_time);
