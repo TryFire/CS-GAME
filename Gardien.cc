@@ -219,6 +219,13 @@ void Gardien::fire (int angle_vertical){
 	message ("Woooshh...");
 	// calcule shoot angle
 	int shoot_angle = (0 - (move_angle - 90) + 360 ) % 360;
+	if (current_blood <= max_blood/2)
+	{
+		srand(time(NULL));
+		int incertain_angle = (rand()+ (int)(_x/Environnement::scale)+ (int)(_y/Environnement::scale)) % 3 ;
+		shoot_angle = shoot_angle - incertain_angle;
+	}
+	
 	_fb -> init (/* position initiale de la boule */ _x, _y, 10.,
 				 /* angles de vis�e */ angle_vertical, shoot_angle);
 }
