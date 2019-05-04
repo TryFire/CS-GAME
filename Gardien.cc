@@ -34,52 +34,84 @@ void Gardien::update (void) {
 		
 	}
 	else {
+		recover();
+		if (!danger){
+			if(!isMeetEnmy) {
+				//attack();
+				
+				if(distance > distance_max) {
+					inverse_direction();
+				}
+				//std::cout << " angle : " <<  _angle << "  move_angle : " << move_angle << std::endl;
+				float dx = vitess*cos(transfomer_angle_a_pi(move_angle));
+				float dy = vitess*sin(transfomer_angle_a_pi(move_angle));
+				if(!move(dx, dy)){
+					inverse_direction();
+				} else {
+					update_distance();
+				}
 
-		
+				// calcule la distance de ce gardien de chasseur
+				float distanca_with_chasseur = calculate_distance(_l -> _guards[0] -> _x, _l -> _guards[0] -> _y);
+				// calcule la position de chasseur
+				int chasseur_x = (int)((_l -> _guards[0] -> _x)/Environnement::scale);
+				int chasseur_y = (int)((_l -> _guards[0] -> _y)/Environnement::scale);
+				// calcule l'id de chasseur
+				int chasseur_id = get_id_by_x_y(chasseur_x, chasseur_y);
+				// calcule l'id de ce gardien
+				int my_id = get_id_by_x_y((int)(_x/Environnement::scale), (int)(_y/Environnement::scale));
+				// angle de gardien vers chasseur
+				int angle_to_chasseur = calculate_angle(_x, _y, _l -> _guards[0] -> _x, _l -> _guards[0] -> _y);
 
-		if(!isMeetEnmy) {
-			//attack();
-			recover();
-			if(distance > distance_max) {
-				inverse_direction();
-			}
-			//std::cout << " angle : " <<  _angle << "  move_angle : " << move_angle << std::endl;
-			float dx = vitess*cos(transfomer_angle_a_pi(move_angle));
-			float dy = vitess*sin(transfomer_angle_a_pi(move_angle));
-			if(!move(dx, dy)){
-				inverse_direction();
+				if(distanca_with_chasseur <= distance_see
+				   // angle forme par direction de gardien et direction de gardien vers chasseur
+				   && abs(angle_to_chasseur - move_angle) <= 90
+				   && !is_blocked(my_id, chasseur_id)) {
+				   	cout << "is meetenmy : " << isMeetEnmy << endl;
+					// souvegarde derniere marche direction ou meetenmy == false
+					last_not_meetenmy_move_angle = move_angle;
+					// mise a jour la direction
+					change_direction(angle_to_chasseur);
+					// mettre un valeur de last_attack_time pour que le gardien ne tire pas tout de suite 
+					time(&current_time);
+					last_attack_time = current_time - (attack_interval_time)/2;
+					isMeetEnmy = true;
+				}
 			} else {
-				update_distance();
+				
+				// calcule la distance de ce gardien de chasseur
+				float distanca_with_chasseur = calculate_distance(_l -> _guards[0] -> _x, _l -> _guards[0] -> _y);
+				// calcule la position de chasseur
+				int chasseur_x = (int)((_l -> _guards[0] -> _x)/Environnement::scale);
+				int chasseur_y = (int)((_l -> _guards[0] -> _y)/Environnement::scale);
+				// calcule l'id de chasseur
+				int chasseur_id = get_id_by_x_y(chasseur_x, chasseur_y);
+				// calcule l'id de ce gardien
+				int my_id = get_id_by_x_y((int)(_x/Environnement::scale), (int)(_y/Environnement::scale));
+				if (distanca_with_chasseur <= distance_see 
+					&& ! is_blocked(my_id, chasseur_id))
+				{
+					// angle de gardien vers chasseur
+					int angle_to_chasseur = calculate_angle(_x, _y, _l -> _guards[0] -> _x, _l -> _guards[0] -> _y);
+					// pour que le gardien vers le chasseur tourjours
+					//cout << calculate_angle(my_id, chasseur_id) << " === " << calculate_angle(_x, _y, _l -> _guards[0] -> _x, _l -> _guards[0] -> _y) << " _angle" << _angle << endl;
+					change_direction(angle_to_chasseur);
+					//cout << "angle_to_chasseur : " << angle_to_chasseur << endl;
+
+					attack();
+				} else {
+					change_direction(last_not_meetenmy_move_angle);
+					isMeetEnmy = false;
+				}
 			}
 
-			// calcule la distance de ce gardien de chasseur
-			float distanca_with_chasseur = calculate_distance(_l -> _guards[0] -> _x, _l -> _guards[0] -> _y);
-			// calcule la position de chasseur
-			int chasseur_x = (int)((_l -> _guards[0] -> _x)/Environnement::scale);
-			int chasseur_y = (int)((_l -> _guards[0] -> _y)/Environnement::scale);
-			// calcule l'id de chasseur
-			int chasseur_id = get_id_by_x_y(chasseur_x, chasseur_y);
-			// calcule l'id de ce gardien
-			int my_id = get_id_by_x_y((int)(_x/Environnement::scale), (int)(_y/Environnement::scale));
-			// angle de gardien vers chasseur
-			int angle_to_chasseur = calculate_angle(_x, _y, _l -> _guards[0] -> _x, _l -> _guards[0] -> _y);
-
-			if(distanca_with_chasseur <= distance_see
-			   // angle forme par direction de gardien et direction de gardien vers chasseur
-			   && abs(angle_to_chasseur - move_angle) <= 90
-			   && !is_blocked(my_id, chasseur_id)) {
-			   	cout << "is meetenmy : " << isMeetEnmy << endl;
-				// souvegarde derniere marche direction ou meetenmy == false
-				last_not_meetenmy_move_angle = move_angle;
-				// mise a jour la direction
-				change_direction(angle_to_chasseur);
-				// mettre un valeur de last_attack_time pour que le gardien ne tire pas tout de suite 
-				time(&current_time);
-				last_attack_time = current_time - (attack_interval_time)/2;
-				isMeetEnmy = true;
+			potentiel_protection = calculate_potentiel_protection();
+			if (potentiel_protection <= potentiel_seuil)
+			{
+				danger = true;
+				cout << "dange : " << danger << endl;
 			}
 		} else {
-			
 			// calcule la distance de ce gardien de chasseur
 			float distanca_with_chasseur = calculate_distance(_l -> _guards[0] -> _x, _l -> _guards[0] -> _y);
 			// calcule la position de chasseur
@@ -89,9 +121,8 @@ void Gardien::update (void) {
 			int chasseur_id = get_id_by_x_y(chasseur_x, chasseur_y);
 			// calcule l'id de ce gardien
 			int my_id = get_id_by_x_y((int)(_x/Environnement::scale), (int)(_y/Environnement::scale));
-			if (distanca_with_chasseur <= distance_see 
-				&& ! is_blocked(my_id, chasseur_id))
-			{
+			if (distanca_with_chasseur <= 2*distance_see 
+				&& !is_blocked(my_id, chasseur_id)) {
 				// angle de gardien vers chasseur
 				int angle_to_chasseur = calculate_angle(_x, _y, _l -> _guards[0] -> _x, _l -> _guards[0] -> _y);
 				// pour que le gardien vers le chasseur tourjours
@@ -101,21 +132,23 @@ void Gardien::update (void) {
 
 				attack();
 			} else {
-				change_direction(last_not_meetenmy_move_angle);
-				isMeetEnmy = false;
+				int find_chassuer_angle = find_direction(my_id, chasseur_id);
+				change_direction(find_chassuer_angle);
+				float dx = vitess*cos(transfomer_angle_a_pi(move_angle));
+				float dy = vitess*sin(transfomer_angle_a_pi(move_angle));
+				move(dx, dy);
 			}
-
-			
-			
-
 		}
+
+
 	}
 }
 
 bool Gardien::move (double dx, double dy) {
 	float forward_x = _x + dx;
 	float forward_y = _y + dy;
-	if(calculate_distance(forward_x, forward_y) > distance_max) {
+	if(calculate_distance(forward_x, forward_y) > distance_max
+	  && !danger) {
 		return false;
 	}
 	if (EMPTY == _l -> data ((int)((forward_x) / Environnement::scale),
@@ -124,7 +157,8 @@ bool Gardien::move (double dx, double dy) {
 		_x += dx;
 		_y += dy;
 
-		if(calculate_distance(origin_x, origin_y) < 0.0005){
+		if(calculate_distance(origin_x, origin_y) < 0.0005
+		   && !danger){
 			//std::cout << move_angle << std::endl;
 			tourner_direction();
 			
@@ -160,6 +194,7 @@ void Gardien::initParameters() {
 	max_shoot_dist = 150;
 
 	potentiel_seuil = 1.5*(lab_width+lab_height);
+	danger = false;
 }
 
 void Gardien::attack(){
@@ -361,7 +396,7 @@ int Gardien::find_direction(int start, int end) {
 
 	int DPN = 1;
 
-	cout << "start : " << get_x_by_id(start) << "," << get_y_by_id(start) << endl;
+	//cout << "start : " << get_x_by_id(start) << "," << get_y_by_id(start) << endl;
 
 	int HN = get_HN(start, end);
 	int * S = new int[4];
@@ -411,7 +446,7 @@ int Gardien::find_direction(int start, int end) {
 
 		if(P[0] == end) {
 			
-			cout << "=====found====" << endl;
+			//cout << "=====found====" << endl;
 			//show_vector(close_list);
 			direction = get_route(close_list, start, P[0]);
 			break;
@@ -567,10 +602,10 @@ int Gardien::get_route(std::vector<int *> close_list, int start, int id) {
 			break;
 		}
 	}
-	int x = get_x_by_id(critical_point);
-	int y = get_y_by_id(critical_point);
+	// int x = get_x_by_id(critical_point);
+	// int y = get_y_by_id(critical_point);
 
-	cout << "the critical point : " << "(" << x << "," << y << ")" << endl;
+	//cout << "the critical point : " << "(" << x << "," << y << ")" << endl;
 
 	return calculate_angle(start, critical_point);
 }

@@ -88,6 +88,8 @@ private:
 	float potentiel_protection;
 	// seuil de potentiel protection qui separe defend et chercher le chasseur
 	float potentiel_seuil;
+	// binaire variable signifique si mon potentiel protection a ete inferieur a seuil
+	bool danger;
 
 public:
 	
