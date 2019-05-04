@@ -38,6 +38,9 @@ Chasseur::Chasseur (Labyrinthe* l) : Mover (20, 50, l, 0)
 
 	recover_interval_time = 5;
 	recover_percent_per_second = 0.02;
+
+	runaway_mode = false;
+	runaway_mode_last_time = 5;
 }
 
 /*
@@ -65,14 +68,30 @@ bool Chasseur::process_fireball (float dx, float dy)
 	for (int i = 1; i < _l -> _nguards; ++i)
 	{
 		Mover * g = _l -> _guards[i];
-		//std :: cout << "dis : "<< ((Gardien *)g) ->calculate_distance(forward_ball_x, forward_ball_y) << std::endl;
+		// si le gardien est dead, ignore
+		if (!((Gardien *)g) -> is_alive()) {
+			continue;
+		}
+		
 		int pos_g_x = (int)(g -> _x / Environnement::scale);
 		int pos_g_y = (int)(g -> _y / Environnement::scale);
 
+		// si on bouge sur un gardien
 		if(pos_forward_ball_x == pos_g_x 
-		   && pos_forward_ball_y == pos_g_y) {
-		   	//std::cout << "dist2 : "<<dist2 << std::endl;
-		   	if (((Gardien *)g) -> hited(power, max_shoot_dist, dist2)){
+		   && pos_forward_ball_y == pos_g_y) {\
+		   	int curr_power = power;
+		   	if (runaway_mode)
+		   	{
+		   		curr_power = power * 2;
+		   		time(&current_time);
+				if (current_time - start_runaway_mode_time >= runaway_mode_last_time)
+				{
+					runaway_mode = false;
+				}
+		   	}
+		   	// le gardien var etre blesse
+		   	if (((Gardien *)g) -> hited(curr_power, max_shoot_dist, dist2)){
+		   		// si le gardien est dead
 		   		g -> rester_au_sol();
 		   	} else {
 		   		g -> tomber();
@@ -139,6 +158,7 @@ void Chasseur::fire (int angle_vertical)
 	_hunter_fire -> play ();
 	_fb -> init (/* position initiale de la boule */ _x, _y, 10.,
 				 /* angles de vis�e */ angle_vertical, _angle);
+	cout << _angle << endl;
 }
 
 bool Chasseur::hited(int power, float max_dist, float dist){
@@ -148,10 +168,21 @@ bool Chasseur::hited(int power, float max_dist, float dist){
 
 	// left power of the gun
 	int power_left = (int)((1.0 - dist/max_dist)*power);
-	//std::cout<< dist << "  " << max_dist << "power lefr : " << power_left << std::endl; 
-	int current_blood_decreased = power_left - armor;
-	//std::cout << "current_blood_decreased: " << current_blood_decreased << std::endl;
-	if (current_blood > current_blood_decreased) {
+	int curr_armor = armor;
+	if (runaway_mode)
+	{
+		curr_armor = armor * 1.5;
+		time(&current_time);
+		if (current_time - start_runaway_mode_time >= runaway_mode_last_time)
+		{
+			runaway_mode = false;
+		}
+	}
+	// le nombre que capital de survie va diminuer
+	int current_blood_decreased = power_left - curr_armor;
+	_hunter_hit -> play();
+	if (current_blood > current_blood_decreased
+		&& current_blood_decreased > 0) {
 		current_blood -= current_blood_decreased;
 		time(&last_injured_time);
 		message ("current_blood left : %d", (int) current_blood);
@@ -174,7 +205,19 @@ void Chasseur::recover(){
 	}
 	if (current_time - last_injured_time >= recover_interval_time)
 	{
-		current_blood += max_blood * recover_percent_per_second;
+		int blood_recover = max_blood * recover_percent_per_second;
+		if (runaway_mode){
+			// en mode d'emballement
+			// récupération du volume sanguin augmentée de 100%
+			blood_recover = max_blood * recover_percent_per_second*2;
+			time(&current_time);
+			if (current_time - start_runaway_mode_time >= runaway_mode_last_time)
+			{
+				runaway_mode = false;
+			}
+		}
+		current_blood += blood_recover;
+		// mise a jour le temps de recover
 		last_recover_time = current_time;
 		if(current_blood > max_blood) {
 			current_blood = max_blood;
@@ -191,11 +234,12 @@ void Chasseur::recover(){
  */
 
 void Chasseur::right_click (bool shift, bool control) {
-	std::cout << "shift : " << shift << " control : "<< control << std::endl;
-	if (shift)
-		_l -> _guards [1] ->tomber (); 
+
+	if (shift) {
+		message("Vous entrez en mode d'emballement, puissance d'attaque augmentée de 100%, volume sanguin augmenté de 100%, armure augmentée de 50%");
+		time(&start_runaway_mode_time);
+		runaway_mode = true;
+	}
 	else {
-		_l -> _guards [1] -> rester_au_sol ();
-		_l -> _guards [1] ->tomber (); 
 	}
 }

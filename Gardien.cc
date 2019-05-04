@@ -15,7 +15,6 @@ Gardien::Gardien (Labyrinthe* l, const char* modele) : Mover (120, 80, l, modele
 	isInitPara = false;
 	lab_width = _l -> width();
 	lab_height = _l -> height();
-	iter = 0;
 }
 
 void Gardien::update (void) {
@@ -121,7 +120,7 @@ void Gardien::update (void) {
 			int chasseur_id = get_id_by_x_y(chasseur_x, chasseur_y);
 			// calcule l'id de ce gardien
 			int my_id = get_id_by_x_y((int)(_x/Environnement::scale), (int)(_y/Environnement::scale));
-			if (distanca_with_chasseur <= 2*distance_see 
+			if (distanca_with_chasseur <= 3*distance_see 
 				&& !is_blocked(my_id, chasseur_id)) {
 				// angle de gardien vers chasseur
 				int angle_to_chasseur = calculate_angle(_x, _y, _l -> _guards[0] -> _x, _l -> _guards[0] -> _y);
@@ -132,11 +131,20 @@ void Gardien::update (void) {
 
 				attack();
 			} else {
-				int find_chassuer_angle = find_direction(my_id, chasseur_id);
-				change_direction(find_chassuer_angle);
-				float dx = vitess*cos(transfomer_angle_a_pi(move_angle));
-				float dy = vitess*sin(transfomer_angle_a_pi(move_angle));
-				move(dx, dy);
+				time(&current_time);
+				if (current_time - last_calculate_route_time >= 0.5)
+				{
+					int find_chassuer_angle = find_direction(my_id, chasseur_id);
+					change_direction(find_chassuer_angle);
+					last_calculate_route_time = current_time;
+				}
+				
+				float dx = 2*vitess*cos(transfomer_angle_a_pi(move_angle));
+				float dy = 2*vitess*sin(transfomer_angle_a_pi(move_angle));
+				if(!move(dx, dy)) {
+					int find_chassuer_angle = find_direction(my_id, chasseur_id);
+					change_direction(find_chassuer_angle);
+				}
 			}
 		}
 
@@ -174,11 +182,11 @@ void Gardien::initParameters() {
 	origin_y = _y;
 	distance_max = 3.0*Environnement::scale;
 	distance = 0;
-	vitess = 0.1;
+	vitess = 0.25;
 	isMeetEnmy = false;
 	move_angle = 0;
 	_angle = move_angle + 270;
-	distance_see = 10*Environnement::scale;
+	distance_see = 15*Environnement::scale;
 	index = 0;
 
 	isDead = false;
@@ -193,7 +201,7 @@ void Gardien::initParameters() {
 	power = 40;
 	max_shoot_dist = 150;
 
-	potentiel_seuil = 1.5*(lab_width+lab_height);
+	potentiel_seuil = 1.4*(lab_width+lab_height);
 	danger = false;
 }
 
@@ -445,7 +453,7 @@ int Gardien::find_direction(int start, int end) {
 		close_list.push_back(P);
 
 		if(P[0] == end) {
-			
+			vector<int *>().swap(open_list);
 			//cout << "=====found====" << endl;
 			//show_vector(close_list);
 			direction = get_route(close_list, start, P[0]);
@@ -606,7 +614,7 @@ int Gardien::get_route(std::vector<int *> close_list, int start, int id) {
 	// int y = get_y_by_id(critical_point);
 
 	//cout << "the critical point : " << "(" << x << "," << y << ")" << endl;
-
+	vector<int *>().swap(close_list);
 	return calculate_angle(start, critical_point);
 }
 

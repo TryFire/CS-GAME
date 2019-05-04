@@ -35,6 +35,10 @@ private:
 	//le persontage de capital initial de survie est incrémenté par seconde
 	float recover_percent_per_second;
 //==============recover variables============
+
+	time_t start_runaway_mode_time;
+	time_t runaway_mode_last_time;
+	bool runaway_mode;
 public:
 	/*
 	 *	Le son...

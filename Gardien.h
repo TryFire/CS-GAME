@@ -32,8 +32,6 @@ private:
 	float distance_max;
 	// la distance de la position de gardien à la position original
 	float distance;
-	// la direction de marche de gardien
-	//float direction;
 	// la vitess de gardien
 	float vitess;
 
@@ -48,18 +46,18 @@ private:
 	bool isDead;
 
 	int index;
-
+//==============capital de survie============
 	//capital initial de survie currant
 	int current_blood;
 	//capital initial de survie maximal
 	int max_blood;
 
 	int armor;
-
+//==============capital de survie============
+//
 	// la largeur and longeur du labyrinthe. 
 	int lab_width, lab_height;
 
-	int iter;
 
 //==============recover variables============
 	// le temps de derniere fois subir de blessure et le temps currant
@@ -90,6 +88,10 @@ private:
 	float potentiel_seuil;
 	// binaire variable signifique si mon potentiel protection a ete inferieur a seuil
 	bool danger;
+
+
+	// le temps de derniere fois d'executer l'algo A*
+	time_t last_calculate_route_time;
 
 public:
 	
