@@ -107,7 +107,7 @@ Nous avons ecrit une fonction \textsl{attaque}, et nous avons mit une interval d
 Nous avons ecrit une fonction (hited) pour gérer la réduction du capital de survie. Il prend 3 arguments : 'int power' : la puissance maximal du pistolet, 'float dist\_max' : La distance la plus éloignée qu'un balle peut voler, et 'dist' : la distance parcourue par la balle. Le gardien a \textbf{l'armure} = 15. Quand le gardien est touché par une balle, cette fonction va être appelé et le capital de survie va diminué par $$power * (dist/dist\_max) - armure$$
 
 \subsection{A* Pathfinding}
-Nous avons ecrit une fonction \textsl{find\_direction} qui prend 2 argument: point de début et fin, et renvoie la direction(angle). Cette fonction utilise algorithme de \textsl{A* Pathfinding} pour trouver le plus court chemin du début à la fin. Et dans cette fonction, après trouver le chemin, Nous calculons le point le plus éloigné(PE) pour que il y a aucun obstacle(le mur ou caisse) sur le chemin de début à PE, et ensuite calculons la direction(angle) de début à PE et le renvoyons. 
+Nous avons ecrit une fonction \textsl{find\_direction} qui prend 2 argument: point de début et fin, et renvoie la direction(angle). Cette fonction utilise algorithme de \textsl{[A* Pathfinding]} pour trouver le plus court chemin du début à la fin. Et dans cette fonction, après trouver le chemin, Nous calculons le point le plus éloigné(PE) pour que il y a aucun obstacle(le mur ou caisse) sur le chemin de début à PE, et ensuite calculons la direction(angle) de début à PE et le renvoyons. 
 
 Afin d'équilibrer le coût du calcul et de s'adapter au mouvement du chasseur, Nous appelons cette fonction chaque seconde.
 
@@ -125,9 +125,13 @@ Après 5 secondes, le chasseur va passer à l'etat Normal et il faut rester 30 s
 
 \section{Conclusion}
 
+\section{Reference}
+\textbf{A* Pathfinding} [https://www.gamedev.net/articles/programming/artificial-intelligence/a-pathfinding-for-beginners-r2003/]
 
 \bibliographystyle{plain} 
 %\bibliographystyle{splncs} 
 \bibliography{bibliopoa}
+
+
 
 \end{document}
