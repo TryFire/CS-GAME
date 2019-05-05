@@ -36,6 +36,7 @@
 \maketitle
 
 \begin{abstract}
+\label{abstract}
 Le but de ce projet est pour réaliser un jeu de type ​\textsl{Kill'emAll}  ​ avec un affichage en 3D, pendant cette durée, nous allons apprendre à écrire un programme à partir de spécifications informelles (énoncé en français), familiariser avec le fait que vos programmes seront réutilisés par d'autres plus tard; donc à les écrire lisiblement en les commentant judicieusement, entrainer à encapsuler vos données et méthodes pour obtenir des programmes robustes et  montrer l'intérêt de séparer la partie traitement d'un programme de sa partie interface utilisateur.
 \end{abstract}
 
@@ -53,13 +54,13 @@ Nous avons crée une classe \textsl{Map} qui responsable de lire le ficher de la
 Dans la fonction de Constructeur de \textsl{Labyrinthe} qui prend une argement 'char* filename', nous pouvons obtenir le tableau en utilisant la classe \textsl{Map}, et ensuite nous utilisons 3 \textsl{std::vector} pour garder les pointeur de \textsl{Mover(Gardien, Chasseur)}, les \textsl{Box} et les \textsl{Wall} en appliquant la fonction \textsl{push\_back}. Quand nous parcourons le tableau, si le caractère n'est pas espace, nous mettons le valeur de \textsl{\_data(i,j)=1} dans la cas (i,j) pour que les objets ne pouvent pas marcher ici. Après le parcours, nous assignons les valeus aux variables \textsl{(\_guards, \_nguards, \_walls etc)} par raport à les vectors.
 
 \section{Garidien}
-Dans ce partie nous allons présenter les ce aue les gardiens vont jouer.
+Dans ce partie nous allons présenter les manières des gardiens.
 \subsection{Etat}
 Il y a 3 etats pour les gardiens : Normale, Danger, Dead . 
 
-\textbf{Normale ou Défense.} Le gradiden  calcule son potentiel de protection ($PP$) \ref{calculeprotection}, le gardien est dans ce etat si PP est supérieur à le seuil \ref{seuil}. Dans ce mode, le gardien a \textsl{une zone de gestion} d'un cercle de rayon 10*Environement::scale. Le gardien partrouille(en appelant la fonction Move) dans ce zone. Il a aussi \textsl{une distance visuelle} de 20*Environement::scale. Le gardien a \textsl{une gamme d'attaque}\ref{gammeattaque}. Une fois le chasseur entre à la zone, le gardien va attaquer\ref{attaque} le chasseur. Si le chasseur sort de la zone, le gardien va continuer à patrouiller dans la direction de la dernière patrouille. 
+\textbf{Normale ou Défense.} Le gradiden  calcule son potentiel de protection ($PP$) \ref{calculeprotection}, le gardien est dans ce etat si PP est supérieur à le seuil \ref{seuil}. Dans ce mode, le gardien a \textsl{une zone de gestion} d'un cercle de rayon 10*Environement::scale. Le gardien partrouille \ref{Partrouille}(en appelant la fonction Move) dans ce zone. Il a aussi \textsl{une distance visuelle} de 20*Environement::scale. Le gardien a \textsl{une gamme d'attaque}\ref{gammeattaque}. Une fois le chasseur entre à la zone, le gardien va attaquer\ref{attaque} le chasseur. Si le chasseur sort de la zone, le gardien va continuer à patrouiller dans la direction de la dernière patrouille. 
 
-\textbf{Danger.} Le gradiden  calcule son potentiel de protection (PP), le gardien va passer a l'etat \textsl{Danger} si PP est inférieur à le seuil. Dans cet etat, si le chasseur est dans le gamme d'attaque\ref{gammeattaque}, le gardien va attaquer\ref{attaque}, sinon, le gardien va calculer la direction de marcher du plus court chemin en utilisant \textbf{A* Pathfinding} pour trouver le chasseur pour protéger le trésor. Dans cet etat, le gardien marche 2 fois plus vite que dans l'etat Normal, et la distance de visuelle va 2 fois augementer qui peut augementer le gamme d'attaque \ref{gammeattaque}. 
+\textbf{Danger.} Le gradiden  calcule son potentiel de protection (PP), le gardien va passer a l'etat \textsl{Danger} si PP est inférieur à le seuil. Dans cet etat, si le chasseur est dans le gamme d'attaque \ref{gammeattaque}, le gardien va attaquer \ref{attaque}, sinon, le gardien va calculer la direction de marcher du plus court chemin en utilisant \textbf{A* Pathfinding} pour trouver le chasseur pour protéger le trésor. Dans cet etat, le gardien marche 2 fois plus vite que dans l'etat Normal, et la distance de visuelle va 2 fois augementer qui peut augementer le gamme d'attaque \ref{gammeattaque}. 
 
 \textbf{Dead.} Si le capital de survie est 0, le gardien va être Dead, il ne peut rien faire.
 
@@ -75,6 +76,10 @@ Le potentiel de protection est lié à 3 facteurs :
 
 Nous calculons la distance maximal entre le chasseur et le trésor : $DCT_{max}$ et la distance entre le gardien et le trésor : $DGT_{max}$. Pour calculer Potentiel de Protection($PP$), nous appliquons le formule $$PP =DCT_{max}-DCT + DGT + P* DCT_{max}$$.  Et nous mettons \textbf{le seuil} \label{seuil}  = 
 $(2*DCT_{max} + DGT_{max})/2$ pour que quand les gardiens qui sont plus loin de le trésor que le chasseur, pouvent chercher le chasseur et essayer de le arrêter de trouver le trésor, les autres qui sont plus proche de trésor que le chasseur, restent à l'etat Normal et partrouiller.
+
+\subsection{Partrouille}
+\label{Partrouille}
+Le gardien garde sa position initialisé et il a un \textsl{une zone de gestion} d'un cercle de rayon 10*Environement::scale. Dans ce zone, il peut se diriger dans 4 directions: Sud, Nord, Est et Ouest. Une fois qu'il sort de cette zone, le va inverser la direction (tourner 180 degrés). Une fois qu'il est de retour à la position initialisé, il va tourner à droite 90 degrés.
 
 \subsection{Gamme d'Attaque}
 \label{gammeattaque}
@@ -98,9 +103,9 @@ Nous avons ecrit une fonction \textsl{attaque}, et nous avons mit une interval d
 
 \subsection{Rétablissement de Capital de Survie}
 \label{CapitalSurvie}
-\textbf{Temps Intervalle} Chaque gardien a le capital initilisé de survie de 100 (capital maximal de survie), une fois il est touché par une balle, le gardien va diminuer un certain nombre du capital par rappot à la puissance de pitolet et la distance de le chasseur tire. Le programme calcule l'intervalle du temps a partir du moment de la dernière blessure, si le gardien reste 8 secondes sans subir de blessure\ref{SubirBlessure}, ce capital va augementer par 5\% du capital maximal(pour Chasseur est 2\%). Ce intervalle peut être réinitialisé par blessure.
+\textbf{Temps Intervalle} Chaque gardien a le capital initilisé de survie de 100 (capital maximal de survie), une fois il est touché par une balle, le gardien va diminuer un certain nombre du capital par rappot à la puissance de pitolet et la distance de le chasseur tire. Le programme calcule l'intervalle du temps a partir du moment de la dernière blessure, si le gardien reste 8 secondes sans subir de blessure\ref{SubirBlessure}, ce capital va augementer par 5\% du capital maximal(pour Chasseur c'est 2\%). Ce intervalle peut être réinitialisé par blessure.
 
-\textbf{Réserves de Santé sous forme de Caisses de Survie} Si le gardien tire le pistolet et le balle touche une caisse, son capital de survie va augementer à la maximun, et le caisse va supprimé dans le memoire.
+\textbf{Réserves de Santé sous forme de Caisses de Survie} Si le gardien tire le pistolet et le balle touche une caisse, son capital de survie va augementer à la maximun (pareil pour le chasseur), et le caisse va supprimé dans le memoire.
 
 \subsection{Subir de Blessure}
 \label{SubirBlessure}
@@ -124,6 +129,7 @@ Après 5 secondes, le chasseur va passer à l'etat Normal et il faut rester 30 s
 
 
 \section{Conclusion}
+Nous avons eu plein de difficultés pendant la programmation : lecture des fichiers, encapsulation des fonctions et données, libération de la mémoire ,etc. Nous avons finalement réussi à les résoudre. En fin nous avons implémenté les principales et encore quelques extensions. Nous avons amélioré les compétences de programmation et capacité de collaboration et commprendre mieux les connaissances la programmation objet grace à language C++. Nous avons arrivé le but de ce projet. 
 
 \section{Reference}
 \textbf{A* Pathfinding} [https://www.gamedev.net/articles/programming/artificial-intelligence/a-pathfinding-for-beginners-r2003/]
