@@ -52,7 +52,79 @@ Nous avons crée une classe \textsl{Map} qui responsable de lire le ficher de la
 
 Dans la fonction de Constructeur de \textsl{Labyrinthe} qui prend une argement 'char* filename', nous pouvons obtenir le tableau en utilisant la classe \textsl{Map}, et ensuite nous utilisons 3 \textsl{std::vector} pour garder les pointeur de \textsl{Mover(Gardien, Chasseur)}, les \textsl{Box} et les \textsl{Wall} en appliquant la fonction \textsl{push\_back}. Quand nous parcourons le tableau, si le caractère n'est pas espace, nous mettons le valeur de \textsl{\_data(i,j)=1} dans la cas (i,j) pour que les objets ne pouvent pas marcher ici. Après le parcours, nous assignons les valeus aux variables \textsl{(\_guards, \_nguards, \_walls etc)} par raport à les vectors.
 
+\section{Garidien}
+Dans ce partie nous allons présenter les ce aue les gardiens vont jouer.
+\subsection{Etat}
+Il y a 3 etats pour les gardiens : Normale, Danger, Dead . 
+
+\textbf{Normale ou Défense.} Le gradiden  calcule son potentiel de protection ($PP$) \ref{calculeprotection}, le gardien est dans ce etat si PP est supérieur à le seuil \ref{seuil}. Dans ce mode, le gardien a \textsl{une zone de gestion} d'un cercle de rayon 10*Environement::scale. Le gardien partrouille(en appelant la fonction Move) dans ce zone. Il a aussi \textsl{une distance visuelle} de 20*Environement::scale. Le gardien a \textsl{une gamme d'attaque}\ref{gammeattaque}. Une fois le chasseur entre à la zone, le gardien va attaquer\ref{attaque} le chasseur. Si le chasseur sort de la zone, le gardien va continuer à patrouiller dans la direction de la dernière patrouille. 
+
+\textbf{Danger.} Le gradiden  calcule son potentiel de protection (PP), le gardien va passer a l'etat \textsl{Danger} si PP est inférieur à le seuil. Dans cet etat, si le chasseur est dans le gamme d'attaque\ref{gammeattaque}, le gardien va attaquer\ref{attaque}, sinon, le gardien va calculer la direction de marcher du plus court chemin en utilisant \textbf{A* Pathfinding} pour trouver le chasseur pour protéger le trésor. Dans cet etat, le gardien marche 2 fois plus vite que dans l'etat Normal, et la distance de visuelle va 2 fois augementer qui peut augementer le gamme d'attaque \ref{gammeattaque}. 
+
+\textbf{Dead.} Si le capital de survie est 0, le gardien va être Dead, il ne peut rien faire.
+
+\subsection{Calcule Potentiel de Protection}
+\label{calculeprotection}
+Le potentiel de protection est lié à 3 facteurs : 
+
+1. Le percentage de gardien vivant : $P$. 
+
+2. La distance entre le chasseur et le trésor : $DCT$. 
+
+3. La distance entre le gardien et le trésor : $DGT$.
+
+Nous calculons la distance maximal entre le chasseur et le trésor : $DCT_{max}$ et la distance entre le gardien et le trésor : $DGT_{max}$. Pour calculer Potentiel de Protection($PP$), nous appliquons le formule $$PP =DCT_{max}-DCT + DGT + P* DCT_{max}$$.  Et nous mettons \textbf{le seuil} \label{seuil}  = 
+$(2*DCT_{max} + DGT_{max})/2$ pour que quand les gardiens qui sont plus loin de le trésor que le chasseur, pouvent chercher le chasseur et essayer de le arrêter de trouver le trésor, les autres qui sont plus proche de trésor que le chasseur, restent à l'etat Normal et partrouiller.
+
+\subsection{Gamme d'Attaque}
+\label{gammeattaque}
+Il y a 3 facteur pour la gamme d'attaque. 
+
+1. Le chasseur faut être dans la fourchette de 180 en face du champ de vision de gardien (Le gardien ne peut pas tourner le dos au chasseur). 
+
+2. Il ne peut y avoir aucun obstacle sur le chemin de la garde et le chasseur. 
+
+3.La distance entre le chasseur et le gardien doit inférieur à la distance visuelle de gardien.
+
+Donc, si le gardien est dans la gemme d'attaque de gardien, le gardien va se tourner vers le chasseur et attaquer le chasseur dans 1 seconde.
+
+\subsection{Attaque}
+\label{attaque}
+Nous avons ecrit une fonction \textsl{attaque}, et nous avons mit une interval de attaque. Chaque fois le programme appelle ce fonction, si l'intervalle de la dernière attaque est inférieur à l'interval de attaque, le gardien fait rien, sinon le gardien va tirer le pistolet vers le chasseur.(Le chasseur peut aussi attaquer les gardiens et les gardiens vont subir de belssure\ref{SubirBlessure} si ils sont touché par une balle tiré par le chasseur.)
+
+\textbf{Probabilité de Manquer Cible.} Le gardien a le capital de survie(currentBlood) \ref{CapitalSurvie}, initialisé à 100. Si currentBlood est supérieur à 50, le gardien a un probabilité de 10\% de manquer sa cible, et si currentBlood est inférieur à 50, ce probabilité va augementer à 60\%.
+
+\textbf{Puissance du pistolet.} Le puissance du pistolet maximal que nous avons mit est 40(Pour chasseur est 50). La puissance du pistolet diminue à mesure que la distance augement. \textsl{La distance maximal} du vol de balle d'un pistolet est 200*Environment::scale, ça veut dire le chasseur ne sera pas blessé si il est à \textsl{La distance maximal} de le gardien..
+
+\subsection{Rétablissement de Capital de Survie}
+\label{CapitalSurvie}
+\textbf{Temps Intervalle} Chaque gardien a le capital initilisé de survie de 100 (capital maximal de survie), une fois il est touché par une balle, le gardien va diminuer un certain nombre du capital par rappot à la puissance de pitolet et la distance de le chasseur tire. Le programme calcule l'intervalle du temps a partir du moment de la dernière blessure, si le gardien reste 8 secondes sans subir de blessure\ref{SubirBlessure}, ce capital va augementer par 5\% du capital maximal(pour Chasseur est 2\%). Ce intervalle peut être réinitialisé par blessure.
+
+\textbf{Réserves de Santé sous forme de Caisses de Survie} Si le gardien tire le pistolet et le balle touche une caisse, son capital de survie va augementer à la maximun, et le caisse va supprimé dans le memoire.
+
+\subsection{Subir de Blessure}
+\label{SubirBlessure}
+Nous avons ecrit une fonction (hited) pour gérer la réduction du capital de survie. Il prend 3 arguments : 'int power' : la puissance maximal du pistolet, 'float dist\_max' : La distance la plus éloignée qu'un balle peut voler, et 'dist' : la distance parcourue par la balle. Le gardien a \textbf{l'armure} = 15. Quand le gardien est touché par une balle, cette fonction va être appelé et le capital de survie va diminué par $$power * (dist/dist\_max) - armure$$
+
+\subsection{A* Pathfinding}
+Nous avons ecrit une fonction \textsl{find\_direction} qui prend 2 argument: point de début et fin, et renvoie la direction(angle). Cette fonction utilise algorithme de \textsl{A* Pathfinding} pour trouver le plus court chemin du début à la fin. Et dans cette fonction, après trouver le chemin, Nous calculons le point le plus éloigné(PE) pour que il y a aucun obstacle(le mur ou caisse) sur le chemin de début à PE, et ensuite calculons la direction(angle) de début à PE et le renvoyons. 
+
+Afin d'équilibrer le coût du calcul et de s'adapter au mouvement du chasseur, Nous appelons cette fonction chaque seconde.
+
+\section{Chasseur}
+Le chasseur se déplace dans le labyrinthe dans une direction qui est indiquée par la souris. Et il tire le pistolet par \textsl{left\_click} de la souris. Il a la même manière que les gardiens sur \textbf{Puissance du pistolet} \ref{attaque} et \textbf{Rétablissement de Capital de Survie} \ref{CapitalSurvie}.Il y a 2 modes pour le chasseur: \textsl{Normal} et \textsl{Runaway}.
+
+\textbf{Etat Normal.} Normalement le chasseur est dans ce etat, le  rétablissement de capital de survie par seconde est 2\%, et la puissance de pistolet est 50 et l'armure est 10. 
+
+Si le jouer tape \textbf{shift} + \textbf{right\_click}, le chasseur va passer à l'etat   \textsl{Runaway}.
+
+\textbf{Etat Runaway.} Le chqsseur dans cet etat va rester 5 seconde, pendant cette durée,  le  rétablissement de capital de survie va 500\% augementer, la puissance de pistolet va 50\% augementer et l'armure va 50\% augementer.
+
+Après 5 secondes, le chasseur va passer à l'etat Normal et il faut rester 30 secondes pour réutiliser \textbf{shift} + \textbf{right\_click} pour passer à l'etat \textsl{Runaway} (30 secondes de refroidissement).
+
+
 \section{Conclusion}
+
 
 \bibliographystyle{plain} 
 %\bibliographystyle{splncs} 
